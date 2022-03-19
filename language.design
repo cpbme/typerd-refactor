@@ -1,0 +1,13 @@
+-- Not planning to bootstrap, sorry!
+enum NodeKind {
+	Name,
+}
+
+type Node<T: NodeKind> = {
+	kind: T,
+};
+
+local function myFunction<T: Node<NodeKind::Name>>(node: T)
+	local that: const<string> = "???"
+	return node as unknown as string
+end

@@ -1,0 +1,11 @@
+{
+	"Parser": {
+		"prefix": "parser",
+		"body": [
+			"pub struct Parse${0};",
+			"define_parser!(Parse${0}, ast::Stmt, |_, state: ParseState<'a>| {",
+			"\ttodo!();",
+			"});"
+		]
+	}
+}
