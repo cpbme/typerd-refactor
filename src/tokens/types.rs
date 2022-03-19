@@ -1,4 +1,4 @@
-#[cfg(target_feature = "serde")]
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 macro_rules! enum_list_ctor {

@@ -1125,3 +1125,14 @@ define_parser!(ParseBlock, ast::Block, |_, state: ParseState<'a>| {
 	let (state, stmts) = ParseStmts.parse(state)?;
 	Ok((state, ast::Block { stmts }))
 });
+
+pub fn parse_from_tokens(tokens: &'_ [AstToken]) -> Result<ast::Block, ParseError> {
+	let state = ParseState::new(tokens);
+	match ParseBlock.parse(state.advance(0)) {
+		Ok((_, block)) => Ok(block),
+		Err(ParseError::NoMatch) => Err(ParseError::LeftoverToken {
+			token: state.peek().unwrap().clone(),
+		}),
+		Err(err) => Err(err),
+	}
+}

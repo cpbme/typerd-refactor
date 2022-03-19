@@ -1,4 +1,8 @@
+#[cfg(feature = "serde")]
+use serde::{Deserialize, Serialize};
+
 #[derive(Clone, Copy, Debug, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub struct Position {
 	pub column: usize,
 	pub line: usize,
@@ -32,6 +36,7 @@ impl std::fmt::Display for Position {
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub struct Location {
 	pub start: Position,
 	pub end: Position,

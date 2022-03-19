@@ -1,4 +1,4 @@
-#[cfg(target_feature = "serde")]
+#[cfg(feature = "serde")]
 use serde::{Deserialize, Serialize};
 
 use crate::Position;

@@ -3,3 +3,6 @@
 
 # lock files
 **/Cargo.lock
+
+# test files for compiler
+/dump
