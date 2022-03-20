@@ -62,7 +62,7 @@ impl TokenizeError {
 
 impl std::fmt::Display for TokenizeError {
 	fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-		write!(f, "{}: {}", self.location(), self.message())
+		write!(f, "{}: {}", self.location().start, self.message())
 	}
 }
 

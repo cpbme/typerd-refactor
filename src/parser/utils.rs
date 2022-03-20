@@ -23,10 +23,10 @@ impl ParseError {
 		match self {
 			NoMatch => "Internal ast error".into(),
 			LeftoverToken { token } => {
-				format!("Leftover token: {}", token.token())
+				format!("Leftover token: {}", token.token().kind())
 			},
 			ExpectedToken { token, expected, .. } => {
-				format!("Expected token `{}` got `{}`", expected, token)
+				format!("Expected token `{}` got `{}`", expected, token.token().kind())
 			},
 		}
 	}
@@ -37,7 +37,7 @@ impl std::fmt::Display for ParseError {
 		use ParseError::*;
 		match self {
 			NoMatch => write!(f, "{}", self.message()),
-			_ => write!(f, "{}: {}", self.location(), self.message()),
+			_ => write!(f, "{}: {}", self.location().start, self.message()),
 		}
 	}
 }

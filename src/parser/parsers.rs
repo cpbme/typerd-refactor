@@ -299,6 +299,13 @@ define_parser!(ParseExprList, ast::ExprList, |_, state: ParseState<'a>| {
 });
 
 #[derive(Debug)]
+pub struct ParseExprListRequired;
+define_parser!(ParseExprListRequired, ast::ExprList, |_, state: ParseState<'a>| {
+	let (state, result) = ParseLikeArgsRequired(ParseExpr, "<exp>".into()).parse(state)?;
+	Ok((state, ast::ExprList(result)))
+});
+
+#[derive(Debug)]
 pub struct ParseCallArgs;
 define_parser!(ParseCallArgs, ast::CallArgs, |_, state: ParseState<'a>| {
 	if let Ok((_ns, open)) = ParseSymbol(SymbolKind::OpenParen).parse(state.advance(0)) {
@@ -776,7 +783,7 @@ define_parser!(
 	|_, state: ParseState<'a>| {
 		let (state, names) = ParseVarAssignNames.parse(state)?;
 		let (state, equals) = ParseSymbol(SymbolKind::Equal).parse(state)?;
-		let (state, exprlist) = ParseExprList.parse(state)?;
+		let (state, exprlist) = ParseExprListRequired.parse(state)?;
 		Ok((
 			state,
 			ast::VarAssign {
@@ -826,7 +833,7 @@ define_parser!(
 			optional!(state, ParseToken(TokenKind::Symbol(SymbolKind::Equal)));
 		let mut exprlist = None;
 		if equals_token.is_some() {
-			let (ns, list) = expect!(state, ParseExprList, "<exp>", "ParseLocalAsssignment");
+			let (ns, list) = expect!(state, ParseExprListRequired, "<exp>", "ParseLocalAsssignment");
 			state = ns;
 			exprlist = Some(list);
 		}
@@ -936,24 +943,6 @@ define_parser!(ParseIfStmt, ast::IfStmt, |_, state: ParseState<'a>| {
 			end_token,
 		},
 	))
-});
-
-#[derive(Debug)]
-pub struct ParseExprListRequired;
-define_parser!(ParseExprListRequired, ast::ExprList, |_,
-                                                      state: ParseState<
-	'a,
->| {
-	let (state, result) = ParseLikeArgs(ParseExpr, "<exp>".into()).parse(state)?;
-	if result.is_empty() {
-		Err(ParseError::ExpectedToken {
-			token: state.advance(0).peek().cloned().unwrap(),
-			expected: "<exp>".into(),
-			source: "ParseExprListRequired".into(),
-		})
-	} else {
-		Ok((state, ast::ExprList(result)))
-	}
 });
 
 #[derive(Debug)]
@@ -1129,7 +1118,16 @@ define_parser!(ParseBlock, ast::Block, |_, state: ParseState<'a>| {
 pub fn parse_from_tokens(tokens: &'_ [AstToken]) -> Result<ast::Block, ParseError> {
 	let state = ParseState::new(tokens);
 	match ParseBlock.parse(state.advance(0)) {
-		Ok((_, block)) => Ok(block),
+		Ok((state, block)) => {
+			let kind = state.peek().map(|v| v.token.kind.clone());
+			if matches!(kind, Some(TokenKind::Eof)) {
+				Ok(block)
+			} else {
+				Err(ParseError::LeftoverToken {
+					token: state.peek().unwrap().clone(),
+				})
+			}
+		},
 		Err(ParseError::NoMatch) => Err(ParseError::LeftoverToken {
 			token: state.peek().unwrap().clone(),
 		}),
