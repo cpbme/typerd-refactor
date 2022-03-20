@@ -29,7 +29,8 @@ pub enum TableField {
 	},
 }
 
-///	A collection of table fields.
+#[rustfmt::skip]
+/// A collection of table fields.
 ///
 /// **Grammar**:
 /// ` <tablesep> := ';' | ',' `
@@ -184,12 +185,10 @@ impl Node for Parameter {
 			self.default_exp
 				.as_ref()
 				.map(|v| v.location().end)
-				.unwrap_or(
-					self.required_type
-						.as_ref()
-						.map(|v| v.location().end)
-						.unwrap_or(self.kind.location().end),
-				),
+				.unwrap_or_else(|| self.required_type
+					.as_ref()
+					.map(|v| v.location().end)
+					.unwrap_or(self.kind.location().end)),
 		)
 	}
 }
