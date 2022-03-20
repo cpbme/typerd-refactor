@@ -1,0 +1,15 @@
+[package]
+name = "typerd"
+description = ""
+readme = "README.md"
+version = "0.1.0"
+
+edition = "2021"
+rust-version = "1.59"
+
+[dependencies]
+serde = { version = "1.0.136", optional = true, features = ["derive"] }
+serde_json = "*"
+typerd-ast = { path = "../typerd-ast", features = ["serde"] }
+typerd-parser = { path = "../typerd-parser" }
+

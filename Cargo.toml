@@ -1,19 +1,6 @@
-[package]
-name = "typerd"
-description = ""
-readme = "README.md"
-version = "0.1.0"
-
-edition = "2021"
-rust-version = "1.59"
-
-[features]
-default = []
-
-[dependencies]
-either = "*"
-serde = { version = "1.0.136", optional = true, features = ["derive"] }
-serde_json = "*"
-
-[dev-dependencies]
-serde = { version = "1.0.132", features = ["derive"] }
+[workspace]
+members = [
+	"typerd",
+	"typerd-ast",
+	"typerd-parser"
+]
