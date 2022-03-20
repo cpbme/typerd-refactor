@@ -2,7 +2,7 @@ COMPILE_PREQ_ARGS	:= --features serde
 CARGO				:= cargo
 
 install:
-	$(CARGO) install --path . $(COMPILE_PREQ_ARGS)
+	$(CARGO) install --path . --offline $(COMPILE_PREQ_ARGS)
 
 compiler:
 	$(CARGO) build $(COMPILE_PREQ_ARGS)

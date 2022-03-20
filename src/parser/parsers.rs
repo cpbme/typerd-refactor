@@ -318,6 +318,9 @@ define_parser!(ParseCallArgs, ast::CallArgs, |_, state: ParseState<'a>| {
 				list,
 			},
 		))
+	} else if ParseSymbol(SymbolKind::OpenCurly).parse(state.advance(0)).is_ok() {
+		let (ns, tbl) = ParseTableCtor.parse(state)?;
+		Ok((ns, ast::CallArgs::Table(ast::Value::Table(tbl))))
 	} else if let Ok((ns, token)) = ParseStr.parse(state.advance(0)) {
 		Ok((ns, ast::CallArgs::Str(ast::Value::Str(token))))
 	} else {
