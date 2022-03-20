@@ -441,13 +441,15 @@ define_parser!(ParseName, ast::Name, |_, state: ParseState<'a>| {
 				},
 			));
 		} else if let TokenKind::Keyword(k) = token.kind() {
-			return Ok((
-				state.advance(1),
-				ast::Name {
-					name: k.str().to_string(),
-					token: token.clone(),
-				},
-			))
+			if matches!(k, KeywordKind::Type) {
+				return Ok((
+					state.advance(1),
+					ast::Name {
+						name: k.str().to_string(),
+						token: token.clone(),
+					},
+				));
+			}
 		}
 	}
 	Err(ParseError::NoMatch)
@@ -689,7 +691,6 @@ define_parser!(
 			ParseToken(TokenKind::Keyword(KeywordKind::Return)).parse(state)?;
 		let (state, exprlist) = ParseExprList.parse(state)?;
 		let (state, semicolon) = optional!(state, ParseSymbol(SymbolKind::Semicolon));
-		panic!("{:#?}", state.peek());
 		Ok((
 			state,
 			ast::ReturnStmt {

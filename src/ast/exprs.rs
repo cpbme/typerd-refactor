@@ -113,6 +113,12 @@ impl Node for FunctionCall {
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub struct ExprList(pub Vec<(Expr, Option<AstToken>)>);
 
+impl ExprList {
+	pub fn is_empty(&self) -> bool {
+		self.0.is_empty()
+	}
+}
+
 impl Node for ExprList {
 	fn location(&self) -> Location {
 		let start = self.0.first().map(|v| v.0.location().start);
