@@ -23,6 +23,10 @@ pub enum TokenKind {
 		quote_kind: QuoteKind,
 		value: String,
 	},
+	MultilineComment {
+		equals: usize,
+		value: String,
+	},
 	MultilineStr {
 		equals: usize,
 		value: String,
@@ -42,7 +46,10 @@ impl TokenKind {
 	pub fn is_trivia(&self) -> bool {
 		matches!(
 			self,
-			TokenKind::LineComment(..) | TokenKind::Shebang(..) | TokenKind::Whitespace(..)
+			TokenKind::LineComment(..)
+				| TokenKind::MultilineComment {..}
+				| TokenKind::Shebang(..)
+				| TokenKind::Whitespace(..)
 		)
 	}
 
@@ -78,6 +85,9 @@ impl TokenKind {
 			TokenKind::Shebang(s) => format!("#!{}", s),
 			TokenKind::Symbol(s) => s.str().to_string(),
 			TokenKind::Whitespace(w) => w.escape_default().to_string(),
+    		TokenKind::MultilineComment { equals, value } => {
+				format!("--[{1}[{0}]{1}]", value, ".".repeat(*equals))
+			},
 		}
 	}
 }

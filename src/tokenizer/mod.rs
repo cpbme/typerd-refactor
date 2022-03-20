@@ -1,6 +1,8 @@
 #[allow(unused_imports)]
 #[allow(unused_macros)]
 mod tests;
+
+use either::{Either, Left, Right};
 use crate::{AstToken, Input, KeywordKind, Location, Position, SymbolKind, Token, TokenKind};
 
 #[derive(Clone, Debug, PartialEq)]
@@ -14,6 +16,10 @@ pub enum TokenizeError {
 		nearest: char,
 	},
 	MalformedString {
+		location: Location,
+		nearest: char,
+	},
+	MalformedComment {
 		location: Location,
 		nearest: char,
 	},
@@ -32,6 +38,7 @@ impl TokenizeError {
 			MalformedNumber { location, .. } => location,
 			MalformedString { location, .. } => location,
 			MalformedShebang { location, .. } => location,
+    		MalformedComment { location, .. } => location,
 		}
 	}
 
@@ -55,6 +62,9 @@ impl TokenizeError {
 					contents,
 					nearest.escape_default()
 				)
+			},
+    		MalformedComment { nearest, .. } => {
+				format!("Malformed comment near `{}`", nearest.escape_default())
 			},
 		}
 	}
@@ -102,6 +112,78 @@ pub struct Tokenizer<'a> {
 impl<'a> Tokenizer<'a> {
 	pub fn new(input: Input<'a>) -> Self {
 		Self { input }
+	}
+
+	fn multiline_comment(&mut self, start: Position) -> TokenizeResult<Either<Token, String>> {
+		debug_assert!(matches!(self.input.current(), '['));
+		let mut equals_raw = String::new();
+		equals_raw.push(self.input.current());
+
+		self.input.skip(1);
+
+		let mut initial_equals: usize = 0;
+		let mut value = String::new();
+
+		// this is where multiline string complexity COMES IN
+		while self.input.current() == '=' {
+			initial_equals += 1;
+			equals_raw.push(self.input.current());
+			self.input.bump();
+		}
+
+		// there's sort kind of last square bracket before
+		// entering to the comment paradise
+		let nearest = self.input.current();
+		if nearest != '[' {
+			return Ok(Right(equals_raw));
+		}
+		self.input.bump();
+
+		loop {
+			let ch = self.input.current();
+			if ch == ']' {
+				let mut dump_str = String::new();
+				dump_str.push(']');
+
+				self.input.bump();
+
+				// we need to check amount of equals' before the string terminates
+				let mut equals: usize = 0;
+				while self.input.current() == '=' {
+					equals += 1;
+					dump_str.push('=');
+					self.input.bump();
+				}
+
+				// compare amount of equals to the initial one
+				if initial_equals == equals {
+					break;
+				}
+				value.push_str(&dump_str);
+			} else if ch == '\0' {
+				break;
+			} else {
+				value.push(ch);
+				self.input.bump();
+			}
+		}
+
+		let nearest = self.input.current();
+		if nearest != ']' {
+			let location = Location::new(start, self.input.position());
+			Err(TokenizeError::MalformedComment { location, nearest })
+		} else {
+			self.input.bump();
+
+			let location = Location::new(start, self.input.position());
+			Ok(Left(Token::new(
+				location,
+				TokenKind::MultilineComment {
+					equals: initial_equals,
+					value,
+				},
+			)))
+		}
 	}
 
 	fn multiline_str(&mut self) -> TokenizeResult {
@@ -393,12 +475,20 @@ impl<'a> Tokenizer<'a> {
 		Ok(tokens)
 	}
 
-	fn comment_like(&mut self) -> TokenizeResult {
+	fn comment_like(&mut self, start: Position) -> TokenizeResult {
 		let is_shebang = self.input.current() == '#';
-		let start = self.input.position();
 
 		let mut contents = String::new();
 		self.input.skip(2);
+
+		// multiline comment check
+		if self.input.current() == '[' && matches!(self.input.lookahead(), Some(&'=' | '[')) {
+			match self.multiline_comment(start) {
+				Ok(Left(comment)) => return Ok(comment),
+				Ok(Right(str)) => contents.push_str(str.as_str()),
+				Err(err) => return Err(err),
+			};
+		}
 
 		loop {
 			let ch = self.input.current();
@@ -435,8 +525,8 @@ impl<'a> Tokenizer<'a> {
 	pub fn advance_token(&mut self) -> TokenizeResult {
 		let lookahead = self.input.lookahead().copied().unwrap_or('\0');
 		match self.input.current() {
-			'#' if self.input.is_first_line() && lookahead == '!' => self.comment_like(),
-			'-' if lookahead == '-' => self.comment_like(),
+			'#' if self.input.is_first_line() && lookahead == '!' => self.comment_like(self.input.position()),
+			'-' if lookahead == '-' => self.comment_like(self.input.position()),
 
 			c if c.is_ascii_whitespace() => self.whitespace(),
 

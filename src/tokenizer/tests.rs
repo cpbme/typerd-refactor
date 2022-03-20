@@ -76,6 +76,43 @@ fn tokenize_string_multiple_lines() {
 }
 
 #[test]
+fn tokenize_multiline_comment_confusables() {
+	let mut tokenizer =
+		init_tokenizer!("--[==incomplete commento\n--[[lol]]\n--[==[hi]==]");
+	cmp_advance_tokens!(tokenizer, {
+		TokenKind::LineComment("[==incomplete commento".into()),
+		TokenKind::MultilineComment {
+			equals: 0,
+			value: "lol".into(),
+		},
+		TokenKind::MultilineComment {
+			equals: 2,
+			value: "hi".into(),
+		},
+	});
+}
+
+#[test]
+fn tokenize_multiline_comment() {
+	let mut tokenizer =
+		init_tokenizer!("--[[alo\n123\"]] --[==[\nalo\n123\"]==] --[==[this is confusable]=]==]");
+	cmp_advance_tokens!(tokenizer, {
+		TokenKind::MultilineComment {
+			equals: 0,
+			value: "alo\n123\"".into(),
+		},
+		TokenKind::MultilineComment {
+			equals: 2,
+			value: "\nalo\n123\"".into(),
+		},
+		TokenKind::MultilineComment {
+			equals: 2,
+			value: "this is confusable]=".into(),
+		},
+	});
+}
+
+#[test]
 fn tokenize_name_and_keywords() {
 	let mut tokenizer = init_tokenizer!("hello _ _H _123 _A1 local");
 	cmp_advance_tokens!(tokenizer, {
