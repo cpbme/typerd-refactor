@@ -967,8 +967,7 @@ define_parser!(
 	|_, state: ParseState<'a>| {
 		let (state, for_token) = ParseToken(TokenKind::Keyword(KeywordKind::For)).parse(state)?;
 		let (state, names) = ParseLocalAssignNameList.parse(state)?;
-		let (state, in_token) =
-			expect!(state, ParseToken(TokenKind::Keyword(KeywordKind::In)), "in", "ParseGenericFor");
+		let (state, in_token) = ParseToken(TokenKind::Keyword(KeywordKind::In)).parse(state)?;
 		let (state, exprlist) = ParseExprListRequired.parse(state)?;
 		let (state, do_token) =
 			expect!(state, ParseToken(TokenKind::Keyword(KeywordKind::Do)), "do", "ParseGenericFor");
