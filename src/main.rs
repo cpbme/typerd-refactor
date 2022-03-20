@@ -64,7 +64,6 @@ fn bootstrap() -> Result<(), Box<dyn Error>> {
 
 		println!("Compiled {} to {} in {:.2?}", filename, output_file_path.to_string_lossy(), elapsed);
 	}
-
 	Ok(())
 }
 

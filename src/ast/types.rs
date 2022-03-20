@@ -198,6 +198,24 @@ impl Node for ParenthesizedType {
     }
 }
 
+/// ` <type> '[' ']' `
+#[allow(dead_code)]
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
+pub struct ArrayType {
+	pub brackets: AstTokenPairs,
+	pub value: Box<TypeReference>,
+}
+
+impl Node for ArrayType {
+	fn location(&self) -> Location {
+		Location::new(
+			self.value.location().start,
+			self.brackets.location().end
+		)
+	}
+}
+
 /// | ` <type> '::' <type> '?' <type> ':' <type> `
 /// | ` <generictype> `
 /// | ` <type> '&' <type> `
@@ -209,6 +227,7 @@ impl Node for ParenthesizedType {
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub enum TypeReference {
+	Array(ArrayType),
 	Conditional(ConditionalType),
 	Generic(GenericType),
 	Intersection(IntersectionType),
@@ -221,6 +240,7 @@ pub enum TypeReference {
 impl Node for TypeReference {
     fn location(&self) -> Location {
         match self {
+        	TypeReference::Array(node) => node.location(),
             TypeReference::Conditional(node) => node.location(),
             TypeReference::Generic(node) => node.location(),
             TypeReference::Intersection(node) => node.location(),

@@ -430,6 +430,7 @@ define_parser!(ParseFunctionCall, ast::FunctionCall, |_, state: ParseState<'a,>|
 #[derive(Debug)]
 pub struct ParseName;
 define_parser!(ParseName, ast::Name, |_, state: ParseState<'a>| {
+	// lua compatibility
 	if let Some(token) = state.peek() {
 		if let TokenKind::Name(name) = token.kind() {
 			return Ok((
@@ -439,6 +440,14 @@ define_parser!(ParseName, ast::Name, |_, state: ParseState<'a>| {
 					token: token.clone(),
 				},
 			));
+		} else if let TokenKind::Keyword(k) = token.kind() {
+			return Ok((
+				state.advance(1),
+				ast::Name {
+					name: k.str().to_string(),
+					token: token.clone(),
+				},
+			))
 		}
 	}
 	Err(ParseError::NoMatch)
@@ -680,6 +689,7 @@ define_parser!(
 			ParseToken(TokenKind::Keyword(KeywordKind::Return)).parse(state)?;
 		let (state, exprlist) = ParseExprList.parse(state)?;
 		let (state, semicolon) = optional!(state, ParseSymbol(SymbolKind::Semicolon));
+		panic!("{:#?}", state.peek());
 		Ok((
 			state,
 			ast::ReturnStmt {
@@ -1051,6 +1061,27 @@ define_parser!(
 );
 
 #[derive(Debug)]
+pub struct ParseTypeDeclaration;
+define_parser!(
+	ParseTypeDeclaration,
+	ast::TypeDeclaration,
+	|_, state: ParseState<'a>| {
+		let (state, type_token) = ParseToken(TokenKind::Keyword(KeywordKind::Type)).parse(state)?;
+
+		// lua compatibility, we don't want to expect a name. it will be horrible!
+		let (state, name) = ParseTypeDeclarationName.parse(state)?;
+		let (state, equals_token) = expect!(state, ParseSymbol(SymbolKind::Equal), "=", "ParseTypeDeclaration");
+		let (state, value) = expect!(state, ParseTypeReference, "<type>", "ParseTypeDeclaration");
+		Ok((state, ast::TypeDeclaration {
+			type_token,
+			name,
+			equals_token,
+			value,
+		}))
+	}
+);
+
+#[derive(Debug)]
 pub struct ParseStmt;
 define_parser!(
 	ParseStmt,
@@ -1070,6 +1101,8 @@ define_parser!(
 		ParseRepeatStmt => ast::Stmt::Repeat,
 		ParseWhileStmt => ast::Stmt::While,
 		ParseVarAssign => ast::Stmt::VarAssign,
+
+		ParseTypeDeclaration => ast::Stmt::TypeDeclaration,
 	})
 );
 

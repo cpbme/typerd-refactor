@@ -86,6 +86,7 @@ enum_list_ctor!(
 		As => "as",
 		Class => "class",
 		Enum => "enum",
+		Type => "type",
 	}
 );
 

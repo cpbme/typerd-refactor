@@ -628,7 +628,23 @@ test_suite!(
 #[allow(dead_code)]
 static LUA_COMPAT_SOURCE: &str = include_str!("binder.ty");
 
-test_suite!(lua_51_sample, LUA_COMPAT_SOURCE, |state: ParseState| {
+test_suite!(compat_lua_51_sample, LUA_COMPAT_SOURCE, |state: ParseState| {
+	let (state, _) = ParseBlock.parse(state).expect("Failed");
+	assert!(matches!(
+		state.peek().expect("Failed").kind(),
+		TokenKind::Eof
+	));
+});
+
+test_suite!(compat_lua_51_type_call, "type(str)", |state: ParseState| {
+	let (state, _) = ParseBlock.parse(state).expect("Failed");
+	assert!(matches!(
+		state.peek().expect("Failed").kind(),
+		TokenKind::Eof
+	));
+});
+
+test_suite!(compat_lua_51_type_declaration, "type str<T> = lol", |state: ParseState| {
 	let (state, _) = ParseBlock.parse(state).expect("Failed");
 	assert!(matches!(
 		state.peek().expect("Failed").kind(),

@@ -87,6 +87,25 @@ impl Node for VarAssign {
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
+pub struct TypeDeclaration {
+	pub type_token: AstToken,
+	pub name: TypeDeclarationName,
+	pub equals_token: AstToken,
+	pub value: TypeReference,
+}
+
+impl Node for TypeDeclaration {
+	fn location(&self) -> Location {
+		Location::new(
+			self.name.location().start,
+			self.value.location().end
+		)
+	}
+}
+
+#[allow(dead_code)]
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(Deserialize, Serialize))]
 pub struct DoStmt {
 	pub do_token: AstToken,
 	pub block: Block,

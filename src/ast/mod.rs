@@ -105,6 +105,7 @@ pub enum Stmt {
 	LocalFunction(LocalFunction),
 	NumericFor(NumericFor),
 	Repeat(RepeatStmt),
+	TypeDeclaration(TypeDeclaration),
 	While(WhileStmt),
 	VarAssign(VarAssign),
 }
@@ -133,6 +134,7 @@ impl Node for Stmt {
 			Stmt::While(node) => node.location(),
 			Stmt::Call(node) => node.location(),
 			Stmt::VarAssign(node) => node.location(),
+			Stmt::TypeDeclaration(node) => node.location(),
 		}
 	}
 }

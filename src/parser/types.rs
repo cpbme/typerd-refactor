@@ -133,6 +133,12 @@ define_parser!(ParseTypeReference, ast::TypeReference, |_, state: ParseState<'a>
 			operator,
 			right: Box::new(right),
 		})))
+	} else if let Ok((ns, left)) = try_parse!(state, ParseSymbol(SymbolKind::OpenBracket)) {
+		let (ns, right) = expect!(ns, ParseSymbol(SymbolKind::CloseBracket), "]", "ParseArrayType");
+		Ok((ns, ast::TypeReference::Array(ast::ArrayType {
+			brackets: ast::AstTokenPairs(left, right),
+			value: Box::new(base),
+		})))
 	} else {
 		Ok((state, base))
 	}
