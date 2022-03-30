@@ -2,10 +2,12 @@
 use serde::{Deserialize, Serialize};
 
 mod ast;
-pub use ast::*;
-
 mod tokens;
+mod visitors;
+
+pub use ast::*;
 pub use tokens::*;
+pub use visitors::*;
 
 /// The location of source code in any object such as node
 /// or token.

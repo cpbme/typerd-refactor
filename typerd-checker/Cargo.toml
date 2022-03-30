@@ -1,0 +1,8 @@
+[package]
+name = "typerd-checker"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+id-arena = "*"
+typerd-ast = { path = "../typerd-ast" }

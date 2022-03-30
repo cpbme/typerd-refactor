@@ -195,14 +195,20 @@ impl Node for Stmts {
 			.first()
 			.map(|v| v.0.location().start)
 			.unwrap_or_default();
-		let end = self.1.as_ref().map(|a| a.location().end).unwrap_or_else(|| self.0
-			.last()
-			.map(|b| {
-				b.1.as_ref()
-					.map(|c| c.location().end)
-					.unwrap_or(b.0.location().end)
-			})
-			.unwrap_or_default());
+		let end = self
+			.1
+			.as_ref()
+			.map(|a| a.location().end)
+			.unwrap_or_else(|| {
+				self.0
+					.last()
+					.map(|b| {
+						b.1.as_ref()
+							.map(|c| c.location().end)
+							.unwrap_or(b.0.location().end)
+					})
+					.unwrap_or_default()
+			});
 
 		Location::new(start, end)
 	}

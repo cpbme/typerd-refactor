@@ -2,5 +2,6 @@
 members = [
 	"typerd",
 	"typerd-ast",
+	"typerd-checker",
 	"typerd-parser"
 ]

@@ -11,5 +11,5 @@ rust-version = "1.59"
 serde = { version = "1.0.136", optional = true, features = ["derive"] }
 serde_json = "*"
 typerd-ast = { path = "../typerd-ast", features = ["serde"] }
+typerd-checker = { path = "../typerd-checker" }
 typerd-parser = { path = "../typerd-parser" }
-

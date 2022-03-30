@@ -6,7 +6,8 @@ use std::{
 	io::Write,
 	path::Path,
 	process,
-	time::Instant, thread::{self, JoinHandle}
+	thread::{self, JoinHandle},
+	time::Instant,
 };
 
 use typerd_parser::parse;
@@ -61,28 +62,32 @@ fn compile(file_name: String) -> ProgramResult {
 
 	let now = Instant::now();
 	let block = error_on_fail!(parse(&contents), "{}:{}", file_name);
-
 	let elapsed = now.elapsed();
 
-	let output_file_path = Path::new(&file_name).with_extension("json");
-	let output = error_on_fail!(
-		serde_json::to_string_pretty(&block),
-		"Failed to convert {}'s AST to JSON: {}",
-		file_name
-	);
+	println!("Compiled {} in {:.2?}", file_name, elapsed);
+
+	// let output_file_path = Path::new(&file_name).with_extension("json");
+	// let output = error_on_fail!(
+	// 	serde_json::to_string_pretty(&block),
+	// 	"Failed to convert {}'s AST to JSON: {}",
+	// 	file_name
+	// );
+
+	use typerd_checker::ModuleInfo;
+
+	let now = Instant::now();
+	let module = error_on_fail!(ModuleInfo::new(&block), "{}:{}", file_name);
+	let elapsed = now.elapsed();
+
+	println!("Typechecked {} in {:.2?}", file_name, elapsed);
 
 	// panic is panic, a bug there in clippy maybe?
-	File::create(output_file_path.clone())
-		.map(|mut v| v.write_all(output.as_bytes()))
-		.unwrap_or_else(|_| panic!("Failed to create output file for {}", file_name))
-		.unwrap();
+	// File::create(output_file_path.clone())
+	// 	.map(|mut v| v.write_all(output.as_bytes()))
+	// 	.unwrap_or_else(|_| panic!("Failed to create output file for {}", file_name))
+	// 	.unwrap();
 
-	println!(
-		"Compiled {} to {} in {:.2?}",
-		file_name,
-		output_file_path.to_string_lossy(),
-		elapsed
-	);
+	println!("{:#?}", module.analyzer);
 
 	Ok(())
 }
@@ -102,7 +107,9 @@ fn bootstrap() -> Result<(), String> {
 
 	let mut terminate = false;
 	for handle in handlers {
-		let res = handle.join().map_err(|v| format!("Failed to wait for a thread: {:#?}", v))?;
+		let res = handle
+			.join()
+			.map_err(|v| format!("Failed to wait for a thread: {:#?}", v))?;
 		if !terminate {
 			match res {
 				Ok(_) => continue,
@@ -110,7 +117,7 @@ fn bootstrap() -> Result<(), String> {
 					println!("{}", err);
 					println!("Terminating compiler process because of this error.");
 					terminate = true;
-				}
+				},
 			};
 		}
 	}
